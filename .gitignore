@@ -1,23 +1,71 @@
-# Node
-node_modules/
+# # Node
+# node_modules/
 
-# Python
-venv/
-__pycache__/
-*.pyc
+# # Python
+# venv/
+# __pycache__/
+# *.pyc
 
+# # Environment variables
+# .env
+
+# # Build folders
+# dist/
+# build/
+
+# # IDE
+# .vscode/
+
+# # OS files
+# .DS_Store
+
+# # Logs
+# *.log
+
+
+
+# =========================
+# Frontend
+# =========================
+frontend/node_modules/
+frontend/dist/
+
+# =========================
+# Backend Python
+# =========================
+backend/venv/
+backend/__pycache__/
+backend/*.pyc
+
+# =========================
 # Environment variables
-.env
+# =========================
+backend/.env
 
+# =========================
+# VS Code
+# =========================
+.vscode/
+
+# =========================
 # Build folders
+# =========================
 dist/
 build/
 
-# IDE
-.vscode/
-
+# =========================
 # OS files
+# =========================
 .DS_Store
+Thumbs.db
 
+# =========================
 # Logs
+# =========================
 *.log
+
+# =========================
+# Python cache anywhere
+# =========================
+__pycache__/
+*.py[cod]
