@@ -1,13 +1,144 @@
+// import Register from "./pages/Register";
+
+// function App() {
+//   return (
+//     <Register />
+//   );
+// }
+
+// export default App;
+
+
+// // src/App.jsx
+// import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+// import { AuthProvider } from "./context/AuthContext";
+// import PrivateRoute from "./components/PrivateRoute";
+// import Login from "./pages/Login";
+// import Register from "./pages/Register";
+// import Dashboard from "./pages/Dashboard";
+
+// function App() {
+//   return (
+//     <AuthProvider>
+//       <BrowserRouter>
+//         <Routes>
+//           <Route path="/login" element={<Login />} />
+//           <Route path="/register" element={<Register />} />
+//           <Route
+//             path="/dashboard"
+//             element={
+//               <PrivateRoute>
+//                 <Dashboard />
+//               </PrivateRoute>
+//             }
+//           />
+//           {/* Default route — send people to dashboard, which will redirect to login if not authed */}
+//           <Route path="/" element={<Navigate to="/dashboard" replace />} />
+//         </Routes>
+//       </BrowserRouter>
+//     </AuthProvider>
+//   );
+// }
+
+// export default App;
+
+// src/App.jsx
+// src/App.jsx
+
+import {
+
+  BrowserRouter,
+
+  Routes,
+
+  Route,
+
+  Navigate,
+
+} from "react-router-dom";
+
+import {
+
+  AuthProvider,
+
+} from "./context/AuthContext";
+
+import Login from "./pages/Login";
+
+import Register from "./pages/Register";
+
+import Dashboard from "./pages/Dashboard";
+
+import PrivateRoute from "./components/PrivateRoute";
+
 function App() {
+
   return (
-    <div>
-      <h1>Smart Receipt & Expense Tracker</h1>
 
-      <h2>Hello World</h2>
+    <AuthProvider>
 
-      <p>Day 1 Coding Complete</p>
-    </div>
+      <BrowserRouter>
+
+        <Routes>
+
+          <Route
+
+            path="/login"
+
+            element={<Login />}
+
+          />
+
+          <Route
+
+            path="/register"
+
+            element={<Register />}
+
+          />
+
+          <Route
+
+            path="/dashboard"
+
+            element={
+
+              <PrivateRoute>
+
+                <Dashboard />
+
+              </PrivateRoute>
+
+            }
+
+          />
+
+          <Route
+
+            path="/"
+
+            element={
+
+              <Navigate
+
+                to="/dashboard"
+
+                replace
+
+              />
+
+            }
+
+          />
+
+        </Routes>
+
+      </BrowserRouter>
+
+    </AuthProvider>
+
   );
+
 }
 
 export default App;
