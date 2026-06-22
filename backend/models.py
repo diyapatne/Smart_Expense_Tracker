@@ -1,4 +1,14 @@
-from sqlalchemy import Column, Integer, String, Float, Date, DateTime, ForeignKey, Text
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Float,
+    Date,
+    DateTime,
+    ForeignKey,
+    Text,
+)
+
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -45,13 +55,26 @@ class Receipt(Base):
 
     created_at = Column(DateTime(), server_default=func.now())
 
+    # Relationships
     owner = relationship("User", back_populates="receipts")
 
-    expense_items = relationship("ExpenseItem", back_populates="receipt")
+    expense_items = relationship(
+        "ExpenseItem",
+        back_populates="receipt",
+        cascade="all, delete-orphan"
+    )
 
-    expenses = relationship("Expense", back_populates="receipt")
+    expenses = relationship(
+        "Expense",
+        back_populates="receipt",
+        cascade="all, delete-orphan"
+    )
 
-    ai_logs = relationship("AILog", back_populates="receipt")
+    ai_logs = relationship(
+        "AILog",
+        back_populates="receipt",
+        cascade="all, delete-orphan"
+    )
 
 
 class ExpenseItem(Base):
@@ -67,6 +90,7 @@ class ExpenseItem(Base):
 
     quantity = Column(Integer, default=1)
 
+    # Relationships
     receipt = relationship("Receipt", back_populates="expense_items")
 
 
@@ -89,6 +113,7 @@ class Expense(Base):
 
     created_at = Column(DateTime(), server_default=func.now())
 
+    # Relationships
     owner = relationship("User", back_populates="expenses")
 
     receipt = relationship("Receipt", back_populates="expenses")
@@ -109,4 +134,5 @@ class AILog(Base):
 
     created_at = Column(DateTime(), server_default=func.now())
 
+    # Relationships
     receipt = relationship("Receipt", back_populates="ai_logs")

@@ -5,6 +5,12 @@ from database import SessionLocal
 from models import Receipt
 from auth import get_current_user
 
+from services.ai_service import analyze_receipt
+
+from models import AILog
+
+from datetime import datetime
+
 router = APIRouter(
     prefix="/receipts",
     tags=["Receipts"]
@@ -183,3 +189,76 @@ def get_receipt(
         )
 
     return receipt
+@router.post("/{id}/analyze")
+
+def analyze_receipt_endpoint(
+    id: int,
+    db: Session = Depends(get_db)
+):
+
+    receipt = db.query(Receipt).filter(
+        Receipt.id == id
+    ).first()
+
+    if not receipt:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Receipt not found"
+        )
+
+    try:
+
+        data, full_response = analyze_receipt(
+            receipt.image_url
+        )
+
+        receipt.merchant_name = data["merchant_name"]
+
+        receipt.date = data["date"]
+
+        receipt.total_amount = data["total_amount"]
+
+        receipt.category = data["category"]
+
+        receipt.status = "processed"
+
+        ai_log = AILog(
+
+            receipt_id=receipt.id,
+
+            prompt=PROMPT,
+
+            response=full_response,
+
+            created_at=datetime.utcnow()
+
+        )
+
+        db.add(ai_log)
+
+        db.commit()
+
+        db.refresh(receipt)
+
+        return {
+
+            "message": "Receipt analyzed",
+
+            "data": data
+
+        }
+
+    except Exception as e:
+
+        receipt.status = "failed"
+
+        db.commit()
+
+        raise HTTPException(
+
+            status_code=500,
+
+            detail=str(e)
+
+        )
