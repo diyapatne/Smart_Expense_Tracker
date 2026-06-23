@@ -18,10 +18,11 @@ s3 = boto3.client(
 def upload_to_s3(file_bytes, filename):
 
     s3.put_object(
-        Bucket=AWS_BUCKET_NAME,
-        Key=filename,
-        Body=file_bytes,
-    )
+    Bucket=AWS_BUCKET_NAME,
+    Key=filename,
+    Body=file_bytes,
+    ContentType="image/jpeg"
+)
 
     image_url = (
         f"https://{AWS_BUCKET_NAME}"

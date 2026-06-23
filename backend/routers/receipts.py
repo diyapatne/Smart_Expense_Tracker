@@ -1,30 +1,53 @@
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
+from fastapi import (
+    APIRouter,
+    Depends,
+    UploadFile,
+    File,
+    HTTPException
+)
+
 from sqlalchemy.orm import Session
 
 from database import SessionLocal
-from models import Receipt
+
+from models import (
+    Receipt,
+    AILog,
+    ExpenseItem
+)
+
 from auth import get_current_user
+
+from services.s3_service import upload_to_s3
 
 from services.ai_service import analyze_receipt
 
-from models import AILog
-
 from datetime import datetime
 
+import uuid
+
+
 router = APIRouter(
+
     prefix="/receipts",
+
     tags=["Receipts"]
+
 )
+
 
 def get_db():
 
     db = SessionLocal()
 
     try:
+
         yield db
 
     finally:
+
         db.close()
+
 
 ALLOWED_TYPES = [
 
@@ -38,12 +61,11 @@ ALLOWED_TYPES = [
 
 MAX_SIZE = 10 * 1024 * 1024
 
-import uuid
 
-from services.s3_service import upload_to_s3
-
+# ================= UPLOAD =================
 
 @router.post("/upload")
+
 async def upload_receipt(
 
     file: UploadFile = File(...),
@@ -53,8 +75,6 @@ async def upload_receipt(
     current_user=Depends(get_current_user)
 
 ):
-
-    # Validate image type
 
     if file.content_type not in ALLOWED_TYPES:
 
@@ -68,8 +88,6 @@ async def upload_receipt(
 
     contents = await file.read()
 
-    # Validate size
-
     if len(contents) > MAX_SIZE:
 
         raise HTTPException(
@@ -80,15 +98,11 @@ async def upload_receipt(
 
         )
 
-    # Create unique filename
-
     filename = (
 
         f"{uuid.uuid4()}_{file.filename}"
 
     )
-
-    # Upload to AWS
 
     image_url = upload_to_s3(
 
@@ -97,8 +111,6 @@ async def upload_receipt(
         filename
 
     )
-
-    # Create database row
 
     receipt = Receipt(
 
@@ -126,7 +138,11 @@ async def upload_receipt(
 
     }
 
+
+# ================= GET ALL =================
+
 @router.get("")
+
 def get_receipts(
 
     db: Session = Depends(get_db),
@@ -151,7 +167,11 @@ def get_receipts(
 
     return receipts
 
+
+# ================= GET ONE =================
+
 @router.get("/{receipt_id}")
+
 def get_receipt(
 
     receipt_id: int,
@@ -190,8 +210,12 @@ def get_receipt(
 
     return receipt
 
+
+# ================= ANALYZE =================
+
 @router.post("/{receipt_id}/analyze")
-def analyze_receipt_endpoint(
+
+def analyze_receipt_route(
 
     receipt_id: int,
 
@@ -229,31 +253,49 @@ def analyze_receipt_endpoint(
 
     try:
 
-        data, raw_response = analyze_receipt(
+        extracted = analyze_receipt(
 
             receipt.image_url
 
         )
 
-        receipt.merchant_name = data.get(
+        raw_prompt = extracted.pop(
+
+            "_raw_prompt",
+
+            ""
+
+        )
+
+        raw_response = extracted.pop(
+
+            "_raw_response",
+
+            ""
+
+        )
+
+        tokens_used = extracted.pop(
+
+            "_tokens_used",
+
+            None
+
+        )
+
+        receipt.merchant_name = extracted.get(
 
             "merchant_name"
 
         )
 
-        receipt.date = data.get(
-
-            "date"
-
-        )
-
-        receipt.total_amount = data.get(
+        receipt.total_amount = extracted.get(
 
             "total_amount"
 
         )
 
-        receipt.category = data.get(
+        receipt.category = extracted.get(
 
             "category"
 
@@ -261,15 +303,63 @@ def analyze_receipt_endpoint(
 
         receipt.status = "processed"
 
+        try:
+
+            receipt.receipt_date = datetime.strptime(
+
+                extracted.get("date"),
+
+                "%Y-%m-%d"
+
+            ).date()
+
+        except:
+
+            receipt.receipt_date = None
+
+        for item in extracted.get(
+
+            "items",
+
+            []
+
+        ):
+
+            db_item = ExpenseItem(
+
+                receipt_id=receipt.id,
+
+                item_name=item.get(
+
+                    "name",
+
+                    "Unknown"
+
+                ),
+
+                price=item.get(
+
+                    "price",
+
+                    0
+
+                ),
+
+                quantity=1
+
+            )
+
+            db.add(db_item)
+
         ai_log = AILog(
 
             receipt_id=receipt.id,
 
-            prompt="Receipt extraction",
+            prompt=raw_prompt,
 
             response=raw_response,
 
-            created_at=datetime.utcnow()
+            tokens_used=tokens_used
 
         )
 
@@ -281,9 +371,33 @@ def analyze_receipt_endpoint(
 
         return {
 
-            "message": "Receipt analyzed",
+            "receipt_id": receipt.id,
 
-            "data": data
+            "status": receipt.status,
+
+            "merchant_name": receipt.merchant_name,
+
+            "date": str(
+
+                receipt.receipt_date
+
+            )
+
+            if receipt.receipt_date
+
+            else None,
+
+            "total_amount": receipt.total_amount,
+
+            "category": receipt.category,
+
+            "items": extracted.get(
+
+                "items",
+
+                []
+
+            )
 
         }
 
@@ -295,8 +409,8 @@ def analyze_receipt_endpoint(
 
         raise HTTPException(
 
-            status_code=500,
+            status_code=422,
 
-            detail=str(e)
+            detail=f"AI processing failed: {str(e)}"
 
         )
