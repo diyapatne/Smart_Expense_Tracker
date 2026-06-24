@@ -105,6 +105,10 @@ class Expense(Base):
 
     amount = Column(Float, nullable=False)
 
+    merchant_name = Column(String(255))
+
+    notes = Column(Text, nullable=True)
+
     category = Column(String(100), nullable=False)
 
     description = Column(String(500), nullable=True)
@@ -114,6 +118,8 @@ class Expense(Base):
     created_at = Column(DateTime(), server_default=func.now())
 
     # Relationships
+    user = relationship("User")
+
     owner = relationship("User", back_populates="expenses")
 
     receipt = relationship("Receipt", back_populates="expenses")

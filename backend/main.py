@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
 import models
 from routers import auth, receipts
-
+from routers import expenses
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Smart Receipt Tracker API")
@@ -20,7 +20,10 @@ app.add_middleware(
 
 app.include_router(auth.router, prefix="/auth")
 app.include_router(receipts.router)
-
+app.include_router(
+    expenses.router,
+    prefix="/expenses"
+)
 
 @app.get("/health")
 def health_check():
