@@ -55,6 +55,8 @@ import {
 
   Navigate,
 
+  Link,
+
 } from "react-router-dom";
 
 import {
@@ -70,6 +72,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 
 import PrivateRoute from "./components/PrivateRoute";
+import UploadReceipt from "./pages/UploadReceipt";
 
 function App() {
 
@@ -79,57 +82,62 @@ function App() {
 
       <BrowserRouter>
 
-        <Routes>
+        <nav className="flex gap-4 border-b border-gray-200 px-6 py-4">
+          <Link
+            to="/dashboard"
+            className="text-gray-700 hover:text-blue-600"
+          >
+            Dashboard
+          </Link>
 
-          <Route
+          <Link
+            to="/upload-receipt"
+            className="text-gray-700 hover:text-blue-600"
+          >
+            Upload Receipt
+          </Link>
+        </nav>
 
-            path="/login"
+          <Routes>
 
-            element={<Login />}
+  <Route
+    path="/login"
+    element={<Login />}
+  />
 
-          />
+  <Route
+    path="/register"
+    element={<Register />}
+  />
 
-          <Route
+  <Route
+    path="/dashboard"
+    element={
+      <PrivateRoute>
+        <Dashboard />
+      </PrivateRoute>
+    }
+  />
 
-            path="/register"
+  <Route
+    path="/upload-receipt"
+    element={
+      <PrivateRoute>
+        <UploadReceipt />
+      </PrivateRoute>
+    }
+  />
 
-            element={<Register />}
+  <Route
+    path="/"
+    element={
+      <Navigate
+        to="/dashboard"
+        replace
+      />
+    }
+  />
 
-          />
-
-          <Route
-
-            path="/dashboard"
-
-            element={
-
-              <PrivateRoute>
-
-                <Dashboard />
-
-              </PrivateRoute>
-
-            }
-
-          />
-
-          <Route
-
-            path="/"
-
-            element={
-
-              <Navigate
-
-                to="/dashboard"
-
-                replace
-
-              />
-
-            }
-
-          />
 
         </Routes>
 
