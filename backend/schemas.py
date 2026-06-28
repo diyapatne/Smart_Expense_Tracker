@@ -84,3 +84,40 @@ class ExpenseListOut(BaseModel):
     page: int
     limit: int
     pages: int
+
+
+
+
+
+
+
+
+
+    # changes day 10
+
+# ============================================================
+# Analytics schemas
+# ============================================================
+
+class AnalyticsSummary(BaseModel):
+    total_spent: float
+    this_month: float
+    avg_per_day: float
+    total_receipts: int
+
+
+class MonthlyDataPoint(BaseModel):
+    month: str          # e.g. "Jan 2026"
+    total: float
+
+
+class CategoryDataPoint(BaseModel):
+    category: str
+    total: float
+    percentage: float
+
+
+class WeeklyDataPoint(BaseModel):
+    day: str             # e.g. "Mon"
+    date: str            # e.g. "2026-06-22" (so frontend can sort/format if needed)
+    total: float

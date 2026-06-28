@@ -5,6 +5,8 @@ from database import engine, Base
 import models
 from routers import auth, receipts
 from routers import expenses
+from routers import auth, receipts, expenses, analytics
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Smart Receipt Tracker API")
@@ -28,3 +30,10 @@ app.include_router(
 @app.get("/health")
 def health_check():
     return {"status": "ok", "message": "API is running"}
+
+
+# backend/main.py
+
+# ... existing code ...
+
+app.include_router(analytics.router, prefix="/analytics")
