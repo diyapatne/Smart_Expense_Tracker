@@ -73,6 +73,8 @@ import Dashboard from "./pages/Dashboard";
 
 import PrivateRoute from "./components/PrivateRoute";
 import UploadReceipt from "./pages/UploadReceipt";
+import Expenses from "./pages/Expenses";
+import EditExpense from "./pages/EditExpense";
 
 function App() {
 
@@ -96,14 +98,19 @@ function App() {
           >
             Upload Receipt
           </Link>
-        </nav>
+            <Link
+            to="/expenses"
+            className="text-gray-700 hover:text-blue-600"
+          >
+            Expenses
+          </Link>
+                </nav>
+                  <Routes>
 
-          <Routes>
-
-  <Route
-    path="/login"
-    element={<Login />}
-  />
+          <Route
+            path="/login"
+            element={<Login />}
+          />
 
   <Route
     path="/register"
@@ -137,7 +144,11 @@ function App() {
       />
     }
   />
-
+<Route path="/expenses" element={<Expenses />} />
+<Route
+    path="/edit-expense/:id"
+    element={<EditExpense />}
+/>
 
         </Routes>
 

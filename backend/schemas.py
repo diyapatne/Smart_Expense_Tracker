@@ -77,3 +77,10 @@ class ExpenseOut(BaseModel):
     class Config:
 
         from_attributes = True
+
+class ExpenseListOut(BaseModel):
+    items: list[ExpenseOut]
+    total: int
+    page: int
+    limit: int
+    pages: int

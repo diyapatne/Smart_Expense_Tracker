@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from datetime import date
-
+import math
 from database import get_db
 
 from auth import get_current_user
@@ -13,14 +13,14 @@ from models import Expense, User
 from schemas import (
     ExpenseCreate,
     ExpenseUpdate,
-    ExpenseOut
+    ExpenseOut,
+    ExpenseListOut,
 )
 
 
 router = APIRouter(
     tags=["Expenses"]
 )
-
 
 @router.post(
     "/",
@@ -185,12 +185,15 @@ def get_expense(
     return expense
 
 
-
 @router.get(
     "/",
-    response_model=list[ExpenseOut]
+    response_model=ExpenseListOut
 )
 def get_expenses(
+
+    page: int = 1,
+
+    limit: int = 10,
 
     category: str = None,
 
@@ -228,4 +231,21 @@ def get_expenses(
             Expense.expense_date <= end
         )
 
-    return query.all()
+    total = query.count()
+
+    expenses = (
+        query
+        .offset((page - 1) * limit)
+        .limit(limit)
+        .all()
+    )
+
+    pages = math.ceil(total / limit) if total > 0 else 1
+
+    return {
+        "items": expenses,
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "pages": pages,
+    }
