@@ -75,6 +75,7 @@ import PrivateRoute from "./components/PrivateRoute";
 import UploadReceipt from "./pages/UploadReceipt";
 import Expenses from "./pages/Expenses";
 import EditExpense from "./pages/EditExpense";
+import Insights from "./pages/Insights";
 
 function App() {
 
@@ -98,6 +99,12 @@ function App() {
           >
             Upload Receipt
           </Link>
+          <Link
+    to="/insights"
+    className="text-gray-700 hover:text-blue-600"
+>
+    Insights
+</Link>
             <Link
             to="/expenses"
             className="text-gray-700 hover:text-blue-600"
@@ -134,7 +141,14 @@ function App() {
       </PrivateRoute>
     }
   />
-
+<Route
+    path="/insights"
+    element={
+        <PrivateRoute>
+            <Insights />
+        </PrivateRoute>
+    }
+/>
   <Route
     path="/"
     element={

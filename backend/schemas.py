@@ -1,6 +1,8 @@
 from pydantic import BaseModel, EmailStr
 from datetime import date
 from typing import Optional
+from typing import List
+from datetime import datetime
 
 class UserCreate(BaseModel):
     email: EmailStr
@@ -85,14 +87,6 @@ class ExpenseListOut(BaseModel):
     limit: int
     pages: int
 
-
-
-
-
-
-
-
-
     # changes day 10
 
 # ============================================================
@@ -121,3 +115,17 @@ class WeeklyDataPoint(BaseModel):
     day: str             # e.g. "Mon"
     date: str            # e.g. "2026-06-22" (so frontend can sort/format if needed)
     total: float
+
+class InsightItem(BaseModel):
+    title: str
+    description: str
+
+
+class InsightResponse(BaseModel):
+    insights: List[InsightItem]
+    savings_tip: str
+    flag: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

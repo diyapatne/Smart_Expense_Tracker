@@ -4,9 +4,10 @@ from sqlalchemy import (
     String,
     Float,
     Date,
-    DateTime,
     ForeignKey,
+    DateTime,
     Text,
+    JSON
 )
 
 from sqlalchemy.orm import relationship
@@ -32,6 +33,12 @@ class User(Base):
     receipts = relationship("Receipt", back_populates="owner")
 
     expenses = relationship("Expense", back_populates="owner")
+    ai_logs = relationship("AILog", back_populates="user")
+    insights = relationship(
+    "Insight",
+    back_populates="user",
+    cascade="all, delete-orphan",
+    )
 
 
 class Receipt(Base):
@@ -130,7 +137,11 @@ class AILog(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    receipt_id = Column(Integer, ForeignKey("receipts.id"), nullable=False)
+    # Which user made the AI request
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    # Receipt ID is optional because insights don't have a receipt
+    receipt_id = Column(Integer, ForeignKey("receipts.id"), nullable=True)
 
     prompt = Column(Text, nullable=False)
 
@@ -138,7 +149,51 @@ class AILog(Base):
 
     tokens_used = Column(Integer, nullable=True)
 
+    status = Column(String(50), default="success")
+
     created_at = Column(DateTime(), server_default=func.now())
 
     # Relationships
+    user = relationship("User", back_populates="ai_logs")
     receipt = relationship("Receipt", back_populates="ai_logs")
+
+from datetime import datetime
+
+
+class Insight(Base):
+    __tablename__ = "insights"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    insights_json = Column(
+        JSON,
+        nullable=False,
+    )
+
+    savings_tip = Column(
+        Text,
+        nullable=False,
+    )
+
+    flag = Column(
+        Text,
+        nullable=False,
+    )
+
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+    )
+
+    user = relationship(
+        "User",
+        back_populates="insights",
+    )

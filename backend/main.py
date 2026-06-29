@@ -6,6 +6,7 @@ import models
 from routers import auth, receipts
 from routers import expenses
 from routers import auth, receipts, expenses, analytics
+from routers import insights
 
 Base.metadata.create_all(bind=engine)
 
@@ -37,3 +38,7 @@ def health_check():
 # ... existing code ...
 
 app.include_router(analytics.router, prefix="/analytics")
+
+app.include_router(
+    insights.router
+)

@@ -135,3 +135,71 @@ def analyze_receipt(image_url: str) -> dict:
     extracted_data["_tokens_used"] = response.usage.total_tokens if response.usage else None
 
     return extracted_data
+
+def generate_financial_insights(prompt: str) -> dict:
+    """
+    Sends a financial summary prompt to the NVIDIA LLM and expects
+    structured JSON containing:
+      - insights
+      - savings_tip
+      - flag
+    """
+
+    response = client.chat.completions.create(
+        model="meta/llama-3.1-70b-instruct",
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You are an expert personal finance advisor. "
+                    "Always return ONLY valid JSON."
+                )
+            },
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+        temperature=0.3,
+        max_tokens=700
+    )
+
+    raw_text = response.choices[0].message.content.strip()
+
+    # Remove markdown if the model wraps JSON in ```json ... ```
+    if raw_text.startswith("```"):
+        raw_text = raw_text.strip("`")
+        if raw_text.lower().startswith("json"):
+            raw_text = raw_text[4:].strip()
+
+    data = json.loads(raw_text)
+
+    # Validate required fields
+    required_fields = [
+        "insights",
+        "savings_tip",
+        "flag"
+    ]
+
+    for field in required_fields:
+        if field not in data:
+            raise ValueError(
+                f"Missing '{field}' in AI response."
+            )
+
+    # ✅ Validate exactly 3 insights
+    if len(data["insights"]) != 3:
+        raise ValueError(
+            "AI did not return exactly three insights."
+        )
+
+    # Metadata
+    data["_raw_prompt"] = prompt
+    data["_raw_response"] = raw_text
+    data["_tokens_used"] = (
+        response.usage.total_tokens
+        if response.usage
+        else None
+    )
+
+    return data
