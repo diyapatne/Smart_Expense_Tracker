@@ -7,7 +7,7 @@ from routers import auth, receipts
 from routers import expenses
 from routers import auth, receipts, expenses, analytics
 from routers import insights
-
+from routers.export import router as export_router
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Smart Receipt Tracker API")
@@ -27,6 +27,8 @@ app.include_router(
     expenses.router,
     prefix="/expenses"
 )
+app.include_router(export_router)
+
 
 @app.get("/health")
 def health_check():
