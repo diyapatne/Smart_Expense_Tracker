@@ -352,16 +352,14 @@ def analyze_receipt_route(
             db.add(db_item)
 
         ai_log = AILog(
+    user_id=current_user.id,
+    receipt_id=receipt.id,
+    prompt=raw_prompt,
+    response=raw_response,
+    tokens_used=tokens_used,
+    status="success",
+)
 
-            receipt_id=receipt.id,
-
-            prompt=raw_prompt,
-
-            response=raw_response,
-
-            tokens_used=tokens_used
-
-        )
 
         db.add(ai_log)
 
