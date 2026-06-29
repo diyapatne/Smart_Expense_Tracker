@@ -12,6 +12,7 @@ export default function Expenses() {
     const [endDate, setEndDate] = useState("");
 const [page, setPage] = useState(1);
 const [totalPages, setTotalPages] = useState(1);
+const [exportLoading, setExportLoading] = useState(null);
 
   useEffect(() => {
   fetchExpenses();
@@ -100,12 +101,94 @@ const getCategoryColor = (category) => {
       alert("Delete failed.");
     }
   };
+
+
+  //csx, pdf, excel
+  const handleExport = async (type) => {
+    try {
+        setExportLoading(type);
+
+        const token = localStorage.getItem("token");
+
+        const params = new URLSearchParams();
+
+        if (startDate) {
+    params.append("start", startDate);
+}
+
+if (endDate) {
+    params.append("end", endDate);
+}
+
+if (category) {
+    params.append("category", category);
+}
+
+        const response = await axiosInstance.get(
+            `/export/${type}?${params.toString()}`,
+            {
+                responseType: "blob",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+
+        const blob = new Blob([response.data]);
+
+        const url = window.URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+
+        link.href = url;
+
+        link.download = `expenses.${type === "excel" ? "xlsx" : type}`;
+
+        document.body.appendChild(link);
+
+        link.click();
+
+        link.remove();
+
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error(error);
+
+        alert("Export failed.");
+    } finally {
+        setExportLoading(null);
+    }
+};
   return (
     <div className="p-6">
 
       <h1 className="text-3xl font-bold mb-6">
         Expense Management
       </h1>
+
+
+      <div className="flex gap-2">
+    <button
+        onClick={() => handleExport("csv")}
+        className="bg-green-600 text-white px-4 py-2 rounded"
+    >
+        {exportLoading === "csv" ? "Exporting..." : "⬇ CSV"}
+    </button>
+
+    <button
+        onClick={() => handleExport("excel")}
+        className="bg-blue-600 text-white px-4 py-2 rounded"
+    >
+        {exportLoading === "excel" ? "Exporting..." : "⬇ Excel"}
+    </button>
+
+    <button
+        onClick={() => handleExport("pdf")}
+        className="bg-red-600 text-white px-4 py-2 rounded"
+    >
+        {exportLoading === "pdf" ? "Exporting..." : "⬇ PDF"}
+    </button>
+</div>
       <div className="flex gap-4 mb-6">
 
   <div>
