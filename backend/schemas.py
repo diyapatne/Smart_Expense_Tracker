@@ -8,6 +8,9 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     full_name: str
+    profession: str
+    monthly_income: float
+    monthly_budget: float
 
 
 class UserLogin(BaseModel):

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, extract
 from datetime import date, timedelta
 import calendar
-
+from datetime import datetime
 from database import get_db
 from auth import get_current_user
 from models import Expense, Receipt, User
@@ -287,6 +287,166 @@ def get_recent_transactions(
 
 # ... your existing routes stay exactly as-is, add this new one below them ...
 
+# @router.get("/calendar")
+# def get_calendar_data(
+#     year: int,
+#     month: int,
+#     db: Session = Depends(get_db),
+#     current_user: User = Depends(get_current_user)
+# ):
+#     """
+#     Returns every day in the given month with personalized spending colors
+#     based on the user's monthly budget.
+#     """
+
+#     # -----------------------------
+#     # Configurable thresholds
+#     # -----------------------------
+#     GREEN_THRESHOLD = 0.80      # <=80% of daily budget
+#     ORANGE_THRESHOLD = 1.20     # <=120% of daily budget
+#     WEEKEND_MULTIPLIER = 1.30   # 30% more budget on Sat/Sun
+
+#     # -----------------------------
+#     # Get daily totals for this month
+#     # -----------------------------
+#     rows = (
+#         db.query(
+#             Expense.expense_date,
+#             func.sum(Expense.amount).label("total")
+#         )
+#         .filter(Expense.user_id == current_user.id)
+#         .filter(extract("year", Expense.expense_date) == year)
+#         .filter(extract("month", Expense.expense_date) == month)
+#         .group_by(Expense.expense_date)
+#         .all()
+#     )
+
+#     daily_totals = {
+#         row.expense_date.isoformat(): round(row.total, 2)
+#         for row in rows
+#     }
+
+#     # -----------------------------
+#     # Average spending per day
+#     # -----------------------------
+#     all_expenses = db.query(Expense).filter(
+#         Expense.user_id == current_user.id
+#     )
+
+#     total_spent = (
+#         all_expenses.with_entities(func.sum(Expense.amount)).scalar()
+#         or 0.0
+#     )
+
+#     earliest = (
+#         all_expenses.with_entities(func.min(Expense.expense_date)).scalar()
+#     )
+
+#     if earliest:
+#         from datetime import date as date_cls
+
+#         days_elapsed = max(
+#             (date_cls.today() - earliest).days,
+#             1
+#         )
+
+#         avg_per_day = total_spent / days_elapsed
+#     else:
+#         avg_per_day = 0.0
+
+#     # -----------------------------
+#     # Personalized budget calculation
+#     # -----------------------------
+#     days_in_month = cal_module.monthrange(year, month)[1]
+#     monthly_budget = current_user.monthly_budget or 0
+
+    
+#     if monthly_budget > 0:
+#         daily_budget = monthly_budget / days_in_month
+#     else:
+#         daily_budget = 0
+
+#     calendar_days = []
+
+#     month_spent = sum(day["total"] for day in calendar_days)
+#     remaining_budget = max(monthly_budget - month_spent, 0)
+
+#     # -----------------------------
+#     # Build response
+#     # -----------------------------
+#     for day_num in range(1, days_in_month + 1):
+
+#         day_str = f"{year:04d}-{month:02d}-{day_num:02d}"
+
+#         day_total = daily_totals.get(day_str, 0.0)
+
+#         weekday = datetime.strptime(
+#             day_str,
+#             "%Y-%m-%d"
+#         ).weekday()
+
+#         adjusted_budget = daily_budget
+
+#         # Saturday or Sunday
+#         if weekday in [5, 6]:
+#             adjusted_budget *= WEEKEND_MULTIPLIER
+
+#         green_limit = adjusted_budget * GREEN_THRESHOLD
+#         orange_limit = adjusted_budget * ORANGE_THRESHOLD
+
+#         # -----------------------------
+#         # Color logic
+#         # -----------------------------
+#         if day_total == 0:
+#             color = "purple"
+
+#         elif monthly_budget == 0:
+#             # Fallback if user has not set a budget
+#             if day_total <= 500:
+#                 color = "green"
+#             elif day_total <= 1500:
+#                 color = "orange"
+#             else:
+#                 color = "red"
+
+#         elif day_total <= green_limit:
+#             color = "green"
+
+#         elif day_total <= orange_limit:
+#             color = "orange"
+
+#         else:
+#             color = "red"
+
+#         calendar_days.append({
+
+#     "date": day_str,
+
+#     "day": day_num,
+
+#     "total": day_total,
+
+#     "daily_budget": round(daily_budget,2),
+
+#     "status": color,
+
+#     "color": color
+
+# })
+
+#     return {
+#     "year": year,
+#     "month": month,
+
+#     "monthly_budget": monthly_budget,
+#     "daily_budget": round(daily_budget, 2),
+#     "avg_per_day": round(avg_per_day, 2),
+
+#     "month_spent": round(month_spent, 2),
+#     "remaining_budget": round(remaining_budget, 2),
+#     "days": calendar_days,
+# }
+
 @router.get("/calendar")
 def get_calendar_data(
     year: int,
@@ -295,13 +455,25 @@ def get_calendar_data(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Returns every day in the given month with that day's total spending,
-    plus the user's avg_per_day (reused from the summary logic) so the
-    frontend can color-code each day.
+    Returns every day in the given month with personalized spending colors
+    based on the user's monthly budget.
     """
-    # Get all expenses in this specific month for this user
+
+    # -----------------------------
+    # Configurable thresholds
+    # -----------------------------
+    GREEN_THRESHOLD = 0.80      # <=80% of daily budget
+    ORANGE_THRESHOLD = 1.20     # <=120% of daily budget
+    WEEKEND_MULTIPLIER = 1.30   # 30% more budget on Sat/Sun
+
+    # -----------------------------
+    # Get daily totals for this month
+    # -----------------------------
     rows = (
-        db.query(Expense.expense_date, func.sum(Expense.amount).label("total"))
+        db.query(
+            Expense.expense_date,
+            func.sum(Expense.amount).label("total")
+        )
         .filter(Expense.user_id == current_user.id)
         .filter(extract("year", Expense.expense_date) == year)
         .filter(extract("month", Expense.expense_date) == month)
@@ -309,54 +481,135 @@ def get_calendar_data(
         .all()
     )
 
-    # Build a lookup: {date_string: total}
-    daily_totals = {row.expense_date.isoformat(): round(row.total, 2) for row in rows}
+    daily_totals = {
+        row.expense_date.isoformat(): round(row.total, 2)
+        for row in rows
+    }
 
-    # Calculate this user's overall average per day (same logic as /summary)
-    all_expenses_query = db.query(Expense).filter(Expense.user_id == current_user.id)
-    total_spent = all_expenses_query.with_entities(func.sum(Expense.amount)).scalar() or 0.0
-    earliest = all_expenses_query.with_entities(func.min(Expense.expense_date)).scalar()
+    # -----------------------------
+    # Average spending per day
+    # -----------------------------
+    all_expenses = db.query(Expense).filter(
+        Expense.user_id == current_user.id
+    )
+
+    total_spent = (
+        all_expenses.with_entities(func.sum(Expense.amount)).scalar()
+        or 0.0
+    )
+
+    earliest = (
+        all_expenses.with_entities(func.min(Expense.expense_date)).scalar()
+    )
 
     if earliest:
         from datetime import date as date_cls
-        days_elapsed = max((date_cls.today() - earliest).days, 1)
+
+        days_elapsed = max(
+            (date_cls.today() - earliest).days,
+            1
+        )
+
         avg_per_day = total_spent / days_elapsed
     else:
         avg_per_day = 0.0
 
-    # Build the full list of days in this month (including days with 0 spending)
+    # -----------------------------
+    # Personalized budget calculation
+    # -----------------------------
     days_in_month = cal_module.monthrange(year, month)[1]
+    monthly_budget = current_user.monthly_budget or 0
+
+    
+    if monthly_budget > 0:
+        daily_budget = monthly_budget / days_in_month
+    else:
+        daily_budget = 0
+
     calendar_days = []
 
+    month_spent = round(sum(daily_totals.values()), 2)
+
+    remaining_budget = max(
+        monthly_budget - month_spent,
+        0
+    )
+    # -----------------------------
+    # Build response
+    # -----------------------------
     for day_num in range(1, days_in_month + 1):
+
         day_str = f"{year:04d}-{month:02d}-{day_num:02d}"
+
         day_total = daily_totals.get(day_str, 0.0)
 
+        weekday = datetime.strptime(
+            day_str,
+            "%Y-%m-%d"
+        ).weekday()
+
+        adjusted_budget = daily_budget
+
+        # Saturday or Sunday
+        if weekday in [5, 6]:
+            adjusted_budget *= WEEKEND_MULTIPLIER
+
+        green_limit = adjusted_budget * GREEN_THRESHOLD
+        orange_limit = adjusted_budget * ORANGE_THRESHOLD
+
+        # -----------------------------
         # Color logic
-         # Fixed threshold color logic — matches the reference design exactly
+        # -----------------------------
         if day_total == 0:
-            color = "purple"      # No spending
-        elif 1 <= day_total <= 500:
-            color = "green"       # Low spending
-        elif 501 <= day_total <= 1500:
-            color = "orange"      # Medium spending
-        else:  # day_total >= 1501
-            color = "red"         # High spending
+            color = "purple"
+
+        elif monthly_budget == 0:
+            # Fallback if user has not set a budget
+            if day_total <= 500:
+                color = "green"
+            elif day_total <= 1500:
+                color = "orange"
+            else:
+                color = "red"
+
+        elif day_total <= green_limit:
+            color = "green"
+
+        elif day_total <= orange_limit:
+            color = "orange"
+
+        else:
+            color = "red"
 
         calendar_days.append({
-            "date": day_str,
-            "day": day_num,
-            "total": day_total,
-            "color": color
-        })
 
+    "date": day_str,
+
+    "day": day_num,
+
+    "total": day_total,
+
+    "daily_budget": round(daily_budget,2),
+
+    "status": color,
+
+    "color": color
+
+})
+    print(calendar_days)
+    print("Month Spent:", month_spent)
     return {
-        "year": year,
-        "month": month,
-        "avg_per_day": round(avg_per_day, 2),
-        "days": calendar_days
-    }
+    "year": year,
+    "month": month,
 
+    "monthly_budget": monthly_budget,
+    "daily_budget": round(daily_budget, 2),
+    "avg_per_day": round(avg_per_day, 2),
+
+    "month_spent": round(month_spent, 2),
+    "remaining_budget": round(remaining_budget, 2),
+    "days": calendar_days,
+}
 
 @router.get("/day/{day_date}")
 def get_day_expenses(

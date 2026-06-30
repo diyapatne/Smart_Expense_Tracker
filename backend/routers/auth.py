@@ -54,9 +54,16 @@ def register(
 
         full_name=user.full_name,
 
+        profession=user.profession,
+        monthly_income=user.monthly_income,
+        monthly_budget=user.monthly_budget,
+
         hashed_password=hash_password(
             user.password
         )
+
+        
+
     )
 
     db.add(new_user)

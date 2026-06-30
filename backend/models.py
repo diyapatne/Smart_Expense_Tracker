@@ -29,6 +29,10 @@ class User(Base):
 
     created_at = Column(DateTime(), server_default=func.now())
 
+    profession = Column(String(100))
+    monthly_income = Column(Float)
+    monthly_budget = Column(Float)
+    # 
     # Relationships
     receipts = relationship("Receipt", back_populates="owner")
 
