@@ -34,6 +34,10 @@ def get_summary(
         .scalar() or 0.0
     )
 
+
+    # 
+    
+    # 
     # Average per day — based on the earliest expense date to today
     earliest = base_query.with_entities(func.min(Expense.expense_date)).scalar()
     if earliest:
@@ -54,6 +58,7 @@ def get_summary(
         this_month=round(this_month_total, 2),
         avg_per_day=round(avg_per_day, 2),
         total_receipts=total_receipts
+        
     )
 
 
