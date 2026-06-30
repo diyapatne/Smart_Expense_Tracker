@@ -29,6 +29,19 @@ export default function UploadReceipt() {
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
+
+
+
+  /////////
+  const [manualMerchant, setManualMerchant] = useState("");
+const [manualCategory, setManualCategory] = useState("Food");
+const [manualAmount, setManualAmount] = useState("");
+const [manualDate, setManualDate] = useState("");
+const [manualNotes, setManualNotes] = useState("");
+const [manualLoading, setManualLoading] = useState(false);
+
+
+
   // ---- Handlers: file selection ----
   function handleFileSelect(selectedFile) {
     if (!selectedFile) return;
@@ -197,11 +210,43 @@ export default function UploadReceipt() {
       );
     }
   }
+  const handleManualExpense = async () => {
+  try {
+    setManualLoading(true);
 
+    await axiosInstance.post("/expenses", {
+      merchant_name: manualMerchant,
+      category: manualCategory,
+      amount: Number(manualAmount),
+      expense_date: manualDate,
+      notes: manualNotes,
+    });
+
+    alert("Expense added successfully!");
+
+    setManualMerchant("");
+    setManualCategory("Food");
+    setManualAmount("");
+    setManualDate("");
+    setManualNotes("");
+
+  } catch (err) {
+    console.error(err);
+    alert("Failed to add expense");
+  } finally {
+    setManualLoading(false);
+  }
+};
   return (
-    <div className="max-w-2xl mx-auto p-4 sm:p-6">
-      <h1 className="text-2xl font-bold mb-4">Upload Receipt</h1>
+    <div className="max-w-7xl mx-auto p-4 sm:p-6">
 
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+        {/* Upload Card */}
+        <div className="bg-white rounded-2xl shadow-lg border p-6">
+        <h1 className="text-2xl font-bold mb-4">
+          Upload Receipt
+        </h1>
       {error && (
         <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-4 text-sm">
           {error}
@@ -355,6 +400,104 @@ export default function UploadReceipt() {
           </button>
         </div>
       )}
+      </div>
+      {/* Divider */}
+
+
+{/* Manual Expense */}
+<div className=" bg-white rounded-2xl shadow-md p-6 border">
+  <h2 className="text-2xl font-bold mb-6">
+    Add Expense Manually
+  </h2>
+
+  <form>
+
+    <div className="mb-4">
+      <label className="block mb-2 font-medium">
+        Merchant Name
+      </label>
+
+      <input
+  type="text"
+  value={manualMerchant}
+  onChange={(e) => setManualMerchant(e.target.value)}
+  className="w-full border rounded-lg px-4 py-2"
+  placeholder="Starbucks"
+/>
     </div>
+
+    <div className="mb-4">
+      <label className="block mb-2 font-medium">
+        Category
+      </label>
+
+      <select
+  value={manualCategory}
+  onChange={(e) => setManualCategory(e.target.value)}
+  className="w-full border rounded-lg px-4 py-2"
+>
+  <option>Food</option>
+  <option>Shopping</option>
+  <option>Transport</option>
+  <option>Entertainment</option>
+  <option>Medical</option>
+  <option>Bills</option>
+  <option>Other</option>
+</select>
+    </div>
+
+    <div className="mb-4">
+      <label className="block mb-2 font-medium">
+        Amount
+      </label>
+
+      <input
+  type="number"
+  value={manualAmount}
+  onChange={(e) => setManualAmount(e.target.value)}
+  className="w-full border rounded-lg px-4 py-2"
+/>
+    </div>
+
+    <div className="mb-4">
+      <label className="block mb-2 font-medium">
+        Expense Date
+      </label>
+
+      <input
+  type="date"
+  value={manualDate}
+  onChange={(e) => setManualDate(e.target.value)}
+  className="w-full border rounded-lg px-4 py-2"
+/>
+    </div>
+
+    <div className="mb-6">
+      <label className="block mb-2 font-medium">
+        Notes
+      </label>
+
+      <textarea
+  rows="3"
+  value={manualNotes}
+  onChange={(e) => setManualNotes(e.target.value)}
+  className="w-full border rounded-lg px-4 py-2"
+/>
+    </div>
+
+    <button
+  type="button"
+  onClick={handleManualExpense}
+  disabled={manualLoading}
+  className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+>
+  {manualLoading ? "Saving..." : "Add Expense"}
+</button>
+
+  </form>
+</div>
+</div>
+    </div>
+    
   );
 }

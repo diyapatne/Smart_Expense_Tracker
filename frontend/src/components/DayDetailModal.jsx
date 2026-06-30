@@ -54,6 +54,34 @@ export default function DayDetailModal({ dayData, onClose }) {
           </span>
         </p>
 
+        <p className="text-sm text-gray-500">
+
+Status:
+
+<span className="font-semibold">
+
+{
+
+dayData.color==="green"
+
+? "🟢 Within Budget"
+
+: dayData.color==="yellow"
+
+? "🟡 Near Budget"
+
+: dayData.color==="red"
+
+? "🔴 Over Budget"
+
+: "⚪ No Spending"
+
+}
+
+</span>
+
+</p>
+
         {dayData.expenses.length === 0 ? (
           <p className="text-sm text-gray-400 text-center py-6">
             No expenses recorded on this day.

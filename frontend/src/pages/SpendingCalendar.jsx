@@ -123,7 +123,66 @@ export default function SpendingCalendar() {
   return (
     <div className="max-w-3xl mx-auto p-4 sm:p-6">
       <h1 className="text-2xl font-bold mb-6">Spending Calendar</h1>
+        {calendarData && (
 
+<div className="grid grid-cols-3 gap-4 mb-6">
+
+<div className="bg-blue-50 rounded-lg p-4">
+
+<p className="text-sm text-gray-500">
+Monthly Budget
+</p>
+
+<p className="font-bold text-xl">
+₹{calendarData.monthly_budget}
+</p>
+
+</div>
+
+<div className="bg-green-50 rounded-lg p-4">
+
+<p className="text-sm text-gray-500">
+Daily Budget
+</p>
+
+<p className="font-bold text-xl">
+₹{calendarData.daily_budget}
+</p>
+
+</div>
+
+<div className="bg-purple-50 rounded-lg p-4">
+
+<p className="text-sm text-gray-500">
+Average Spend
+</p>
+
+<p className="font-bold text-xl">
+₹{calendarData.avg_per_day}
+</p>
+
+</div>
+<div className="bg-orange-50 rounded-xl shadow p-5">
+  <p className="text-sm text-gray-500">
+    Spent This Month
+  </p>
+
+  <p className="text-3xl font-bold text-orange-700">
+    ₹{calendarData.month_spent}
+  </p>
+</div>
+<div className="bg-green-50 rounded-xl shadow p-5">
+  <p className="text-sm text-gray-500">
+    Remaining Budget
+  </p>
+
+  <p className="text-3xl font-bold text-green-700">
+    ₹{calendarData.remaining_budget}
+  </p>
+</div>
+</div>
+
+)}
       {error && (
         <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-4 text-sm">
           {error}
@@ -152,19 +211,25 @@ export default function SpendingCalendar() {
       {/* ---- Legend ---- */}
       <div className="flex gap-4 mb-4 text-xs text-gray-600">
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-full bg-green-300 inline-block" /> Low spend
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-full bg-yellow-300 inline-block" /> Average
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded-full bg-red-300 inline-block" /> High spend
-        </span>
-        {calendarData && (
-          <span className="text-gray-400 ml-auto">
-            Avg/day: ₹{calendarData.avg_per_day.toFixed(2)}
-          </span>
-        )}
+        <span className="w-3 h-3 rounded-full bg-gray-300"></span>
+        No Spending
+    </span>
+
+    <span className="flex items-center gap-1">
+        <span className="w-3 h-3 rounded-full bg-green-300"></span>
+        Within Budget
+    </span>
+
+    <span className="flex items-center gap-1">
+        <span className="w-3 h-3 rounded-full bg-yellow-300"></span>
+        Near Budget
+    </span>
+
+    <span className="flex items-center gap-1">
+        <span className="w-3 h-3 rounded-full bg-red-300"></span>
+        Over Budget
+    </span>
+        
       </div>
 
       {loading ? (
