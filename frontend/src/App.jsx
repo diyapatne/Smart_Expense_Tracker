@@ -46,17 +46,12 @@
 // src/App.jsx
 
 import {
-
   BrowserRouter,
-
   Routes,
-
   Route,
-
   Navigate,
-
   Link,
-
+  useLocation,
 } from "react-router-dom";
 
 import {
@@ -76,6 +71,64 @@ import UploadReceipt from "./pages/UploadReceipt";
 import Expenses from "./pages/Expenses";
 import EditExpense from "./pages/EditExpense";
 import Insights from "./pages/Insights";
+import SpendingCalendar from "./pages/SpendingCalendar";
+
+function Navbar() {
+  const location = useLocation();
+
+  // Hide navbar on authentication pages
+  if (
+    location.pathname === "/login" ||
+    location.pathname === "/register"
+  ) {
+    return null;
+  }
+
+  return (
+    <nav className="bg-white shadow-md border-b px-8 py-4 flex items-center justify-between">
+      <h1 className="text-xl font-bold text-blue-700">
+        💳 Smart Expense Tracker
+      </h1>
+
+      <div className="flex gap-6 font-medium">
+        <Link
+          to="/dashboard"
+          className="text-gray-700 hover:text-blue-600"
+        >
+          Dashboard
+        </Link>
+
+        <Link
+          to="/calendar"
+          className="text-gray-700 hover:text-blue-600"
+        >
+          Calendar
+        </Link>
+
+        <Link
+          to="/upload-receipt"
+          className="text-gray-700 hover:text-blue-600"
+        >
+          Upload Receipt
+        </Link>
+
+        <Link
+          to="/expenses"
+          className="text-gray-700 hover:text-blue-600"
+        >
+          Expenses
+        </Link>
+
+        <Link
+          to="/insights"
+          className="text-gray-700 hover:text-blue-600"
+        >
+          Insights
+        </Link>
+      </div>
+    </nav>
+  );
+}
 
 function App() {
 
@@ -85,33 +138,8 @@ function App() {
 
       <BrowserRouter>
 
-        <nav className="flex gap-4 border-b border-gray-200 px-6 py-4">
-          <Link
-            to="/dashboard"
-            className="text-gray-700 hover:text-blue-600"
-          >
-            Dashboard
-          </Link>
-
-          <Link
-            to="/upload-receipt"
-            className="text-gray-700 hover:text-blue-600"
-          >
-            Upload Receipt
-          </Link>
-          <Link
-    to="/insights"
-    className="text-gray-700 hover:text-blue-600"
->
-    Insights
-</Link>
-            <Link
-            to="/expenses"
-            className="text-gray-700 hover:text-blue-600"
-          >
-            Expenses
-          </Link>
-                </nav>
+        <Navbar />
+          
                   <Routes>
 
           <Route
@@ -158,6 +186,17 @@ function App() {
       />
     }
   />
+
+<Route
+  path="/calendar"
+  element={
+    <PrivateRoute>
+      <SpendingCalendar />
+    </PrivateRoute>
+  }
+/>
+
+
 <Route path="/expenses" element={<Expenses />} />
 <Route
     path="/edit-expense/:id"
