@@ -1,5 +1,5 @@
 # backend/routers/analytics.py
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func, extract
 from datetime import date, timedelta
@@ -9,7 +9,8 @@ from database import get_db
 from auth import get_current_user
 from models import Expense, Receipt, User
 from schemas import AnalyticsSummary, MonthlyDataPoint, CategoryDataPoint, WeeklyDataPoint
-
+from sqlalchemy import func, extract
+import calendar as cal_module
 router = APIRouter(tags=["Analytics"])
 
 
@@ -280,3 +281,120 @@ def get_recent_transactions(
         }
         for expense in expenses
     ]
+
+
+
+
+# ... your existing routes stay exactly as-is, add this new one below them ...
+
+@router.get("/calendar")
+def get_calendar_data(
+    year: int,
+    month: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Returns every day in the given month with that day's total spending,
+    plus the user's avg_per_day (reused from the summary logic) so the
+    frontend can color-code each day.
+    """
+    # Get all expenses in this specific month for this user
+    rows = (
+        db.query(Expense.expense_date, func.sum(Expense.amount).label("total"))
+        .filter(Expense.user_id == current_user.id)
+        .filter(extract("year", Expense.expense_date) == year)
+        .filter(extract("month", Expense.expense_date) == month)
+        .group_by(Expense.expense_date)
+        .all()
+    )
+
+    # Build a lookup: {date_string: total}
+    daily_totals = {row.expense_date.isoformat(): round(row.total, 2) for row in rows}
+
+    # Calculate this user's overall average per day (same logic as /summary)
+    all_expenses_query = db.query(Expense).filter(Expense.user_id == current_user.id)
+    total_spent = all_expenses_query.with_entities(func.sum(Expense.amount)).scalar() or 0.0
+    earliest = all_expenses_query.with_entities(func.min(Expense.expense_date)).scalar()
+
+    if earliest:
+        from datetime import date as date_cls
+        days_elapsed = max((date_cls.today() - earliest).days, 1)
+        avg_per_day = total_spent / days_elapsed
+    else:
+        avg_per_day = 0.0
+
+    # Build the full list of days in this month (including days with 0 spending)
+    days_in_month = cal_module.monthrange(year, month)[1]
+    calendar_days = []
+
+    for day_num in range(1, days_in_month + 1):
+        day_str = f"{year:04d}-{month:02d}-{day_num:02d}"
+        day_total = daily_totals.get(day_str, 0.0)
+
+        # Color logic
+         # Fixed threshold color logic — matches the reference design exactly
+        if day_total == 0:
+            color = "purple"      # No spending
+        elif 1 <= day_total <= 500:
+            color = "green"       # Low spending
+        elif 501 <= day_total <= 1500:
+            color = "orange"      # Medium spending
+        else:  # day_total >= 1501
+            color = "red"         # High spending
+
+        calendar_days.append({
+            "date": day_str,
+            "day": day_num,
+            "total": day_total,
+            "color": color
+        })
+
+    return {
+        "year": year,
+        "month": month,
+        "avg_per_day": round(avg_per_day, 2),
+        "days": calendar_days
+    }
+
+
+@router.get("/day/{day_date}")
+def get_day_expenses(
+    day_date: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Returns every individual expense for one specific date.
+    Used when the user clicks on a calendar day.
+    """
+    from datetime import date as date_cls
+    try:
+        parsed_date = date_cls.fromisoformat(day_date)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format, use YYYY-MM-DD")
+
+    expenses = (
+        db.query(Expense)
+        .filter(Expense.user_id == current_user.id)
+        .filter(Expense.expense_date == parsed_date)
+        .order_by(Expense.created_at.desc())
+        .all()
+    )
+
+    total = sum(exp.amount for exp in expenses)
+
+    return {
+        "date": day_date,
+        "total": round(total, 2),
+        "expenses": [
+            {
+                "id": exp.id,
+                "merchant_name": exp.merchant_name,
+                "category": exp.category,
+                "amount": exp.amount,
+                "notes": exp.notes
+            }
+            for exp in expenses
+        ]
+    }
