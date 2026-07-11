@@ -129,7 +129,7 @@ class Expense(Base):
     created_at = Column(DateTime(), server_default=func.now())
 
     # Relationships
-    user = relationship("User")
+    # user = relationship("User")
 
     owner = relationship("User", back_populates="expenses")
 
