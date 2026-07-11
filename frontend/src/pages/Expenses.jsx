@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import axiosInstance from "../api/axios";
 import { Link } from "react-router-dom";
+import { downloadFile } from "../utils/download";
 
 export default function Expenses() {
   const [expenses, setExpenses] = useState([]);
@@ -169,21 +170,39 @@ if (category) {
 
       <div className="flex gap-2">
     <button
-        onClick={() => handleExport("csv")}
-        className="bg-green-600 text-white px-4 py-2 rounded"
+        onClick={() =>
+    downloadFile("/export/csv", "expenses.csv", {
+      category,
+      start: startDate,
+      end: endDate,
+    })
+  }
+         className="bg-green-600 text-white px-4 py-2 rounded"
     >
         {exportLoading === "csv" ? "Exporting..." : "⬇ CSV"}
     </button>
 
     <button
-        onClick={() => handleExport("excel")}
+        onClick={() =>
+    downloadFile("/export/excel", "expenses.xlsx", {
+      category,
+      start: startDate,
+      end: endDate,
+    })
+  }
         className="bg-blue-600 text-white px-4 py-2 rounded"
     >
         {exportLoading === "excel" ? "Exporting..." : "⬇ Excel"}
     </button>
 
     <button
-        onClick={() => handleExport("pdf")}
+         onClick={() =>
+    downloadFile("/export/pdf", "expenses.pdf", {
+      category,
+      start: startDate,
+      end: endDate,
+    })
+  }
         className="bg-red-600 text-white px-4 py-2 rounded"
     >
         {exportLoading === "pdf" ? "Exporting..." : "⬇ PDF"}

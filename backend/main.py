@@ -1,4 +1,6 @@
 # backend/main.py
+import os
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
@@ -9,13 +11,16 @@ from routers import auth, receipts, expenses, analytics
 from routers import insights
 from routers.export import router as export_router
 Base.metadata.create_all(bind=engine)
-
+load_dotenv()
 app = FastAPI(title="Smart Receipt Tracker API")
-
+ALLOWED_ORIGINS = os.getenv(
+    "ALLOWED_ORIGINS",
+    "http://localhost:5173"
+).split(",")
 # CORS will matter more on Day 4, but no harm adding it now
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
